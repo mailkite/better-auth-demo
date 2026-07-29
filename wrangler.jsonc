@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "better-auth-mailkite-demo",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  // nodejs_compat is required by both Next.js's server runtime and better-auth's
+  // crypto usage. global_fetch_strictly_public keeps the inbox webhook honest:
+  // a fetch to our own hostname goes out to the internet and back rather than
+  // short-circuiting internally, so signature checks behave as they will in prod.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "routes": [{ "pattern": "better-auth.mailkite.dev", "custom_domain": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "better-auth-demo",
+      "database_id": "8c1a401e-b72e-469c-b471-d99c3f6e1ea6"
+    }
+  ],
+  "observability": { "enabled": true }
+}
