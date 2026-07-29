@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+
+import Link from "next/link";
 
 import { Background } from "@/components/background";
 import { Button } from "@/components/ui/button";

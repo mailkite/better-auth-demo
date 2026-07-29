@@ -7,19 +7,18 @@
  * This is the whole integration. It is deliberately not abstracted: the point of the
  * demo is that you can read the real wiring in one screen.
  */
-import { betterAuth } from "better-auth";
-import { emailOTP, magicLink, organization } from "better-auth/plugins";
+import type { D1Database } from "@cloudflare/workers-types";
 import { mailkite } from "@mailkite/better-auth";
 import { mailkiteInbox } from "@mailkite/better-auth-inbox";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { betterAuth } from "better-auth";
+import { emailOTP, magicLink, organization } from "better-auth/plugins";
 import { Kysely } from "kysely";
 import { D1Dialect } from "kysely-d1";
-
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 // Imported rather than relying on the global from `wrangler types`: putting
 // @cloudflare/workers-types into compilerOptions.types shadows the DOM/Node globals
 // that the Next.js pages in this same project need.
-import type { D1Database } from "@cloudflare/workers-types";
 
 type Env = {
   DB: D1Database;
@@ -45,6 +44,15 @@ function build(env: Env) {
     appName: "Mainline",
     appUrl,
     brandColor: "#2f6fe0",
+    // REQUIRED on Workers, and the single easiest thing to get wrong.
+    //
+    // Sends are dispatched without being awaited, deliberately: awaiting them would
+    // make the response slower when an account exists, which leaks account existence
+    // by timing. But a Worker is torn down as soon as it returns a response, so an
+    // un-registered background promise is simply killed — the signup succeeds and the
+    // email silently never sends. waitUntil keeps the isolate alive for the send
+    // without putting it on the response's critical path.
+    waitUntil: (p) => getCloudflareContext().ctx.waitUntil(p),
     onError: (err, meta) => console.error("[mailkite]", meta.type, err),
   });
 
