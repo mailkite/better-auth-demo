@@ -27,7 +27,7 @@ wiring is readable in one screen.
 ```ts
 const mk = mailkite({
   apiKey: env.MAILKITE_API_KEY,
-  from: "hello@auth.mailk.us",
+  from: "better-auth@auth.mailkite.dev",
   appName: "Mainline",
   appUrl,
   // REQUIRED on serverless. Sends are dispatched without being awaited so response

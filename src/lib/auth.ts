@@ -32,7 +32,7 @@ type Env = {
 
 function build(env: Env) {
   const appUrl = env.APP_URL ?? "https://better-auth.mailkite.dev";
-  const from = env.MAIL_FROM ?? "hello@auth.mailk.us";
+  const from = env.MAIL_FROM ?? "better-auth@auth.mailkite.dev";
 
   // One MailKite instance serves every outbound surface. It IS a Better Auth plugin —
   // dropping it into `plugins` wires sendVerificationEmail and sendResetPassword via
@@ -79,7 +79,7 @@ function build(env: Env) {
       organization({ sendInvitationEmail: mk.sendInvitationEmail }),
       mailkiteInbox({
         apiKey: env.MAILKITE_API_KEY,
-        domain: env.MAIL_DOMAIN ?? "auth.mailk.us",
+        domain: env.MAIL_DOMAIN ?? "auth.mailkite.dev",
         webhookSecret: env.MAILKITE_WEBHOOK_SECRET,
         baseURL: appUrl,
       }),

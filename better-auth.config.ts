@@ -19,7 +19,7 @@ import { mailkiteInbox } from "@mailkite/better-auth-inbox";
 
 const mk = mailkite({
   apiKey: "mk_live_schema_generation_only",
-  from: "hello@auth.mailk.us",
+  from: "better-auth@auth.mailkite.dev",
   appName: "Mainline",
   appUrl: "https://better-auth.mailkite.dev",
 });
@@ -35,7 +35,7 @@ export const auth = betterAuth({
     organization({ sendInvitationEmail: mk.sendInvitationEmail }),
     mailkiteInbox({
       apiKey: "mk_live_schema_generation_only",
-      domain: "auth.mailk.us",
+      domain: "auth.mailkite.dev",
       webhookSecret: "schema-generation-only",
       baseURL: "https://better-auth.mailkite.dev",
     }),
