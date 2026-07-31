@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
 
@@ -10,10 +10,16 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 
+/** Domain addresses are provisioned on. Matches MAIL_DOMAIN on the server. */
+const DOMAIN = "auth.mailkite.dev";
+
 type Res = { data?: unknown; error?: { message?: string } | null };
+
+type Mailbox = { id: string; address: string };
 
 type Message = {
   id: string;
+  mailboxId: string;
   fromAddress: string;
   toAddress: string;
   subject?: string | null;
@@ -23,19 +29,33 @@ type Message = {
 };
 
 /** Narrow the client's loosely-typed responses without pretending they're guaranteed. */
-function asMessages(data: unknown): Message[] {
-  if (Array.isArray(data)) return data as Message[];
-  if (data && typeof data === "object" && "messages" in data) {
-    const m = (data as { messages?: unknown }).messages;
-    if (Array.isArray(m)) return m as Message[];
+function pick<T>(data: unknown, key: string): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === "object" && key in data) {
+    const v = (data as Record<string, unknown>)[key];
+    if (Array.isArray(v)) return v as T[];
   }
   return [];
+}
+
+/**
+ * A pronounceable suggestion, so the field is never empty and nobody has to invent
+ * something before they can try the demo. Random enough to rarely collide, and a
+ * collision is a clean "already taken" they can just edit.
+ */
+function suggestLocalPart() {
+  const words = [
+    "ada", "grace", "hopper", "turing", "lovelace", "curie",
+    "noether", "hamilton", "shannon", "knuth", "ritchie", "liskov",
+  ];
+  const word = words[Math.floor(Math.random() * words.length)];
+  return `${word}${Math.floor(Math.random() * 900 + 100)}`;
 }
 
 const Inbox = () => {
   const { data: session, isPending } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [address, setAddress] = useState<string | null>(null);
+  const [mailbox, setMailbox] = useState<Mailbox | null>(null);
   const [localPart, setLocalPart] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -43,21 +63,26 @@ const Inbox = () => {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Fill the field once, not on every keystroke-driven re-render — regenerating a
+  // suggestion under the user's cursor is maddening.
+  const suggested = useRef(suggestLocalPart());
+  useEffect(() => {
+    setLocalPart((v) => v || suggested.current);
+  }, []);
+
   /**
    * Reach the inbox endpoints through the Better Auth client.
    *
-   * Called as a function, never hoisted into a variable used as a hook
-   * dependency: the client is a Proxy that mints a fresh object on every
-   * property access, so `const inbox = authClient.mailkite.inbox` produces a new
-   * reference each render. Putting that in a useCallback dep list made `load`
-   * unstable, which re-ran the effect, which re-rendered — an infinite fetch loop
-   * that hammered the API and made errors strobe on screen.
+   * Called as a function, never hoisted into a variable used as a hook dependency:
+   * the client is a Proxy that mints a fresh object on every property access, so
+   * holding it in a variable makes every callback unstable and loops the effect.
    */
   const api = () =>
     (
       authClient as unknown as {
         mailkite: {
           inbox: {
+            mailboxes: (a?: unknown) => Promise<Res>;
             messages: (a?: unknown) => Promise<Res>;
             provision: (a: unknown) => Promise<Res>;
             reply: (a: unknown) => Promise<Res>;
@@ -66,24 +91,66 @@ const Inbox = () => {
       }
     ).mailkite.inbox;
 
+  /**
+   * Load the caller's mailbox and only the mail addressed to it.
+   *
+   * Scoped with `mailboxId` on purpose: an account that has claimed several
+   * addresses over time would otherwise see every message it has ever received
+   * pooled into one list, which reads like a bug.
+   */
   const load = useCallback(async () => {
     try {
-      const res = await api().messages({});
+      const boxes = await api().mailboxes();
+      if (boxes.error) {
+        setError(boxes.error.message ?? "Could not load your inbox.");
+        return;
+      }
+      const list = pick<Mailbox>(boxes.data, "mailboxes");
+      const current = list[list.length - 1] ?? null; // most recently claimed
+      setMailbox(current);
+
+      if (!current) {
+        setMessages([]);
+        setError(null);
+        return;
+      }
+
+      const res = await api().messages({ query: { mailboxId: current.id } });
       if (res.error) setError(res.error.message ?? "Could not load messages.");
       else {
-        setMessages(asMessages(res.data));
+        setMessages(pick<Message>(res.data, "messages"));
         setError(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load messages.");
+      setError(err instanceof Error ? err.message : "Could not load your inbox.");
     }
   }, []);
 
-  // Keyed on the user id, not the session object — `useSession` hands back a new
-  // object reference on every poll, which would re-trigger this on a timer.
+  // Keyed on the user id, not the session object — useSession hands back a new
+  // reference on every refresh, which would re-trigger this on a timer.
   const userId = session?.user?.id;
   useEffect(() => {
     if (userId) void load();
+  }, [userId, load]);
+
+  /**
+   * Refresh when the tab regains attention, instead of a Refresh button.
+   *
+   * Event-driven, not a timer: nothing here polls. It fits how the demo is
+   * actually used — you send mail from another app, come back to this tab, and
+   * the message is already there.
+   */
+  useEffect(() => {
+    if (!userId) return;
+    const onWake = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onWake);
+    window.addEventListener("focus", onWake);
+    return () => {
+      document.removeEventListener("visibilitychange", onWake);
+      window.removeEventListener("focus", onWake);
+    };
   }, [userId, load]);
 
   async function provision() {
@@ -91,19 +158,17 @@ const Inbox = () => {
     setError(null);
     setNote(null);
     try {
-      const res = await api().provision({ localPart: localPart || undefined });
+      const res = await api().provision({ localPart });
       if (res.error) {
-        setError(res.error.message ?? "Could not claim an address.");
+        setError(res.error.message ?? "Could not claim that address.");
       } else {
-        const addr =
-          (res.data as { address?: string } | undefined)?.address ?? null;
-        setAddress(addr);
+        const addr = (res.data as { address?: string } | undefined)?.address;
         setNote(
           addr
-            ? `Your inbox is live at ${addr} — send it an email and it will appear below.`
+            ? `${addr} is live. Email it from anywhere and it will appear below.`
             : "Address claimed.",
         );
-        await load(); // pick the new (empty) mailbox up straight away
+        await load();
       }
     } finally {
       setBusy(false);
@@ -122,6 +187,7 @@ const Inbox = () => {
         setNote(`Replied to ${replyTo.fromAddress}.`);
         setReplyTo(null);
         setReplyText("");
+        await load();
       }
     } finally {
       setBusy(false);
@@ -149,8 +215,8 @@ const Inbox = () => {
               </CardHeader>
               <CardContent className="grid gap-4">
                 <p className="text-muted-foreground text-sm">
-                  The inbox is session-scoped — you can only read mail addressed to a
-                  mailbox you own.
+                  The inbox is session-scoped — you can only read mail addressed
+                  to a mailbox you own.
                 </p>
                 <Link href="/login">
                   <Button className="w-full">Go to sign in</Button>
@@ -184,29 +250,37 @@ const Inbox = () => {
 
           <Card className="mb-6">
             <CardHeader>
-              <p className="font-semibold">Claim an address</p>
+              <p className="font-semibold">
+                {mailbox ? "Your address" : "Claim an address"}
+              </p>
               <p className="text-muted-foreground text-sm">
-                Provisions a real mailbox on the demo domain and registers the inbound
-                route with MailKite.
+                {mailbox
+                  ? "A real mailbox. Send it an email from anywhere and it shows up here."
+                  : "Provisions a real mailbox and registers the inbound route with MailKite."}
               </p>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Input
-                  placeholder="local part (optional)"
-                  value={localPart}
-                  onChange={(e) => setLocalPart(e.target.value)}
-                  className="max-w-56"
-                />
-                <Button onClick={provision} disabled={busy}>
-                  {busy ? "Working…" : "Claim"}
-                </Button>
-                <Button variant="outline" onClick={load} disabled={busy}>
-                  Refresh
-                </Button>
-              </div>
-              {address && (
-                <p className="mt-3 font-mono text-sm">{address}</p>
+              {mailbox ? (
+                <p className="font-mono text-sm break-all">{mailbox.address}</p>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* The domain sits inside the field so the full address is
+                      visible before you commit to it, not revealed afterwards. */}
+                  <div className="border-input bg-background focus-within:ring-ring flex items-center rounded-md border focus-within:ring-1">
+                    <Input
+                      value={localPart}
+                      onChange={(e) => setLocalPart(e.target.value)}
+                      aria-label="Address you want"
+                      className="w-36 border-0 pr-0 shadow-none focus-visible:ring-0"
+                    />
+                    <span className="text-muted-foreground pr-3 pl-0.5 font-mono text-sm">
+                      @{DOMAIN}
+                    </span>
+                  </div>
+                  <Button onClick={provision} disabled={busy || !localPart}>
+                    {busy ? "Claiming…" : "Claim"}
+                  </Button>
+                </div>
               )}
               {note && (
                 <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-400">
@@ -224,7 +298,9 @@ const Inbox = () => {
           {messages.length === 0 ? (
             <Card>
               <CardContent className="text-muted-foreground py-10 text-center text-sm">
-                No mail yet. Claim an address above, send it an email, and refresh.
+                {mailbox
+                  ? `Nothing yet. Email ${mailbox.address} and it will appear here.`
+                  : "Claim an address above to get started."}
               </CardContent>
             </Card>
           ) : (
@@ -240,7 +316,7 @@ const Inbox = () => {
                         {new Date(m.receivedAt).toLocaleString()}
                       </p>
                     </div>
-                    <p className="text-muted-foreground mt-1 font-mono text-xs">
+                    <p className="text-muted-foreground mt-1 font-mono text-xs break-all">
                       {m.fromAddress} → {m.toAddress}
                     </p>
                     {m.text && (
