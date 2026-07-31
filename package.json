@@ -15,7 +15,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@mailkite/better-auth": "^0.3.0",
-    "@mailkite/better-auth-inbox": "^0.3.0",
+    "@mailkite/better-auth-inbox": "^0.4.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^15.5.5",
