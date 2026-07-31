@@ -88,60 +88,57 @@ export const FAQ = ({
 }: {
   headerTag?: "h1" | "h2";
   className?: string;
+  /** Extra classes for the header block — used by /faq to centre and narrow it. */
   className2?: string;
 }) => {
+  const Heading = headerTag;
   return (
     <section className={cn("py-28 lg:py-32", className)}>
       <div className="container max-w-5xl">
-        <div className={cn("mx-auto grid gap-16 lg:grid-cols-2", className2)}>
-          <div className="space-y-4">
-            {headerTag === "h1" ? (
-              <h1 className="text-2xl tracking-tight md:text-4xl lg:text-5xl">
-                Questions about the plugins
-              </h1>
-            ) : (
-              <h2 className="text-2xl tracking-tight md:text-4xl lg:text-5xl">
-                Questions about the plugins
-              </h2>
-            )}
-            <p className="text-muted-foreground max-w-md leading-snug lg:mx-auto">
-              If it isn&apos;t answered here, the{" "}
-              <Link
-                href="https://mailkite.dev/docs/auth/better-auth"
-                className="underline underline-offset-4"
-              >
-                docs
-              </Link>{" "}
-              and the{" "}
-              <Link
-                href="https://github.com/mailkite/better-auth-demo"
-                className="underline underline-offset-4"
-              >
-                demo source
-              </Link>{" "}
-              are both public.
-            </p>
-          </div>
+        {/* Header spans the full width; the categories sit in two columns below it. */}
+        <div className={cn("max-w-2xl space-y-4", className2)}>
+          <Heading className="text-2xl tracking-tight md:text-4xl lg:text-5xl">
+            Questions about the plugins
+          </Heading>
+          <p className="text-muted-foreground leading-snug">
+            If it isn&apos;t answered here, the{" "}
+            <Link
+              href="https://mailkite.dev/docs/auth/better-auth"
+              className="underline underline-offset-4"
+            >
+              docs
+            </Link>{" "}
+            and the{" "}
+            <Link
+              href="https://github.com/mailkite/better-auth-demo"
+              className="underline underline-offset-4"
+            >
+              demo source
+            </Link>{" "}
+            are both public.
+          </p>
+        </div>
 
-          <div className="grid gap-6 text-start">
-            {categories.map((category, categoryIndex) => (
-              <div key={category.title} className="">
-                <h3 className="text-muted-foreground border-b py-4">
-                  {category.title}
-                </h3>
-                <Accordion type="single" collapsible className="w-full">
-                  {category.questions.map((item, i) => (
-                    <AccordionItem key={i} value={`${categoryIndex}-${i}`}>
-                      <AccordionTrigger>{item.question}</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        {item.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
-            ))}
-          </div>
+        <div className="mt-12 grid gap-x-12 gap-y-8 text-start md:grid-cols-2 lg:mt-16">
+          {categories.map((category, categoryIndex) => (
+            <div key={category.title}>
+              <h3 className="text-muted-foreground border-b py-4">
+                {category.title}
+              </h3>
+              <Accordion type="single" collapsible className="w-full">
+                {category.questions.map((item, i) => (
+                  <AccordionItem key={i} value={`${categoryIndex}-${i}`}>
+                    <AccordionTrigger className="text-start">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          ))}
         </div>
       </div>
     </section>

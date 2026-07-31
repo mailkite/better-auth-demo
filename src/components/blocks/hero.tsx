@@ -33,10 +33,12 @@ const features = [
 ];
 
 const snippet = `import { betterAuth } from "better-auth";
+import { emailOTP, magicLink } from "better-auth/plugins";
 import { mailkite } from "@mailkite/better-auth";
 import { mailkiteInbox } from "@mailkite/better-auth-inbox";
 
-const mk = mailkite({ from: "you@yourdomain.com", appName: "Acme" });
+// apiKey falls back to process.env.MAILKITE_API_KEY when you omit it.
+const mk = mailkite({ from: "auth@yourdomain.com", appName: "Acme" });
 
 export const auth = betterAuth({
   emailAndPassword: { enabled: true },
@@ -44,7 +46,11 @@ export const auth = betterAuth({
     mk,                                    // verification + reset, wired for you
     magicLink({ sendMagicLink: mk.sendMagicLink }),
     emailOTP({ sendVerificationOTP: mk.sendVerificationOTP }),
-    mailkiteInbox({ domain: "yourdomain.com", webhookSecret }),
+    mailkiteInbox({
+      apiKey: process.env.MAILKITE_API_KEY!,   // required here, no env fallback
+      domain: "yourdomain.com",
+      webhookSecret: process.env.MAILKITE_WEBHOOK_SECRET!,
+    }),
   ],
 });`;
 

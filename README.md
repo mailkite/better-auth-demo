@@ -28,7 +28,7 @@ wiring is readable in one screen.
 const mk = mailkite({
   apiKey: env.MAILKITE_API_KEY,
   from: "better-auth@auth.mailkite.dev",
-  appName: "Mainline",
+  appName: "MailKite Demo",
   appUrl,
   // REQUIRED on serverless. Sends are dispatched without being awaited so response
   // time can't leak whether an account exists — but a Worker is torn down the moment
@@ -44,7 +44,12 @@ export const auth = betterAuth({
     magicLink({ sendMagicLink: mk.sendMagicLink }),
     emailOTP({ sendVerificationOTP: mk.sendVerificationOTP }),
     organization({ sendInvitationEmail: mk.sendInvitationEmail }),
-    mailkiteInbox({ apiKey, domain, webhookSecret, baseURL }),
+    mailkiteInbox({
+      apiKey: env.MAILKITE_API_KEY,          // required — no env fallback here
+      domain: "auth.mailkite.dev",
+      webhookSecret: env.MAILKITE_WEBHOOK_SECRET,
+      baseURL: appUrl,                       // where MailKite POSTs deliveries
+    }),
   ],
 });
 ```
