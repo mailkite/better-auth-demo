@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 
+type Res = { data?: unknown; error?: { message?: string } | null };
+
 type Message = {
   id: string;
   fromAddress: string;
@@ -41,37 +43,55 @@ const Inbox = () => {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const inbox = (authClient as unknown as {
-    mailkite: {
-      inbox: {
-        messages: (a?: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
-        provision: (a: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
-        reply: (a: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
-      };
-    };
-  }).mailkite.inbox;
+  /**
+   * Reach the inbox endpoints through the Better Auth client.
+   *
+   * Called as a function, never hoisted into a variable used as a hook
+   * dependency: the client is a Proxy that mints a fresh object on every
+   * property access, so `const inbox = authClient.mailkite.inbox` produces a new
+   * reference each render. Putting that in a useCallback dep list made `load`
+   * unstable, which re-ran the effect, which re-rendered — an infinite fetch loop
+   * that hammered the API and made errors strobe on screen.
+   */
+  const api = () =>
+    (
+      authClient as unknown as {
+        mailkite: {
+          inbox: {
+            messages: (a?: unknown) => Promise<Res>;
+            provision: (a: unknown) => Promise<Res>;
+            reply: (a: unknown) => Promise<Res>;
+          };
+        };
+      }
+    ).mailkite.inbox;
 
   const load = useCallback(async () => {
-    setError(null);
     try {
-      const res = await inbox.messages({});
+      const res = await api().messages({});
       if (res.error) setError(res.error.message ?? "Could not load messages.");
-      else setMessages(asMessages(res.data));
+      else {
+        setMessages(asMessages(res.data));
+        setError(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load messages.");
     }
-  }, [inbox]);
+  }, []);
 
+  // Keyed on the user id, not the session object — `useSession` hands back a new
+  // object reference on every poll, which would re-trigger this on a timer.
+  const userId = session?.user?.id;
   useEffect(() => {
-    if (session) void load();
-  }, [session, load]);
+    if (userId) void load();
+  }, [userId, load]);
 
   async function provision() {
     setBusy(true);
     setError(null);
     setNote(null);
     try {
-      const res = await inbox.provision({ localPart: localPart || undefined });
+      const res = await api().provision({ localPart: localPart || undefined });
       if (res.error) {
         setError(res.error.message ?? "Could not claim an address.");
       } else {
@@ -83,6 +103,7 @@ const Inbox = () => {
             ? `Your inbox is live at ${addr} — send it an email and it will appear below.`
             : "Address claimed.",
         );
+        await load(); // pick the new (empty) mailbox up straight away
       }
     } finally {
       setBusy(false);
@@ -95,7 +116,7 @@ const Inbox = () => {
     setBusy(true);
     setError(null);
     try {
-      const res = await inbox.reply({ messageId: replyTo.id, text: replyText });
+      const res = await api().reply({ messageId: replyTo.id, text: replyText });
       if (res.error) setError(res.error.message ?? "Could not send the reply.");
       else {
         setNote(`Replied to ${replyTo.fromAddress}.`);

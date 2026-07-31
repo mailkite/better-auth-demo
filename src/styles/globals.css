@@ -6,24 +6,32 @@
 @variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.92 0.04 86.47);
-  --primary-foreground: oklch(0.31 0.02 86.64);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* --- MailKite palette (light) -------------------------------------------
+     Canonical values, kept in sync with the marketing site's
+     website/src/styles/global.css. Hex on purpose: these are the brand's
+     source-of-truth values, and Tailwind 4 still resolves `/opacity`
+     modifiers against them via color-mix. */
+  --background: #ffffff;
+  --foreground: #11141b;
+  --card: #ffffff;
+  --card-foreground: #11141b;
+  --popover: #ffffff;
+  --popover-foreground: #11141b;
+  --primary: #2f6fe0;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f8fc;
+  --secondary-foreground: #11141b;
+  --muted: #f6f8fc;
+  --muted-foreground: #5a6473;
+  --accent: #eef2fa;
+  --accent-foreground: #11141b;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e3e8f0;
+  --input: #e3e8f0;
+  --ring: #2f6fe0;
+  /* Second brand hue, used for the page gradient so the wash reads as the
+     brand's blue→violet rather than a flat tint of the button colour. */
+  --brand-2: #6a4dff;
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -66,24 +74,26 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* --- MailKite palette (dark) -------------------------------------------- */
+  --background: #0b0d12;
+  --foreground: #e6e9ef;
+  --card: #171b25;
+  --card-foreground: #e6e9ef;
+  --popover: #171b25;
+  --popover-foreground: #e6e9ef;
+  --primary: #6ea8fe;
+  --primary-foreground: #0b0d12;
+  --secondary: #171b25;
+  --secondary-foreground: #e6e9ef;
+  --muted: #171b25;
+  --muted-foreground: #8a93a6;
+  --accent: #1e2430;
+  --accent-foreground: #e6e9ef;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: #1e2430;
+  --input: #1e2430;
+  --ring: #6ea8fe;
+  --brand-2: #7c6cff;
 
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -103,6 +113,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-brand-2: var(--brand-2);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
