@@ -10,52 +10,72 @@ import { cn } from "@/lib/utils";
 
 const categories = [
   {
-    title: "Support",
+    title: "The demo",
     questions: [
       {
-        question: "How do I update my account without breaking my laptop?",
+        question: "Are the emails real?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "Yes. Every message this site sends goes out through MailKite from better-auth@auth.mailkite.dev, and mail you send to an address you claim really arrives. Use an address you can check — nothing here is stubbed.",
       },
       {
-        question: "Is support free, or do I need to Google everything?",
+        question: "What can I try?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "Sign up and you get a verification email. Sign in with a magic link, a 6-digit code, or a password. Then claim an inbox address, email it from anywhere, watch it appear, and reply from the app.",
       },
       {
-        question: "Are you going to be subsumed by AI?",
+        question: "Is my data kept?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "This is a public demo on a throwaway database. Don't put anything sensitive in it, and assume the accounts and mail here get wiped without notice.",
       },
     ],
   },
   {
-    title: "Your account",
+    title: "The plugins",
     questions: [
       {
-        question: "Is support free, or do I need to Google everything?",
+        question: "Do I need both?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "No. They're independent. @mailkite/better-auth sends Better Auth's outbound email; @mailkite/better-auth-inbox lets your app receive mail. Install either, or both.",
       },
       {
-        question: "Are you going to be subsumed by AI?",
+        question: "Will the sending plugin make me run a migration?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "No. It declares no schema and no endpoints — it's a transport, and sending a password-reset email shouldn't cost you a database table. The inbox plugin does add two tables, because receiving genuinely needs somewhere to put the mail.",
+      },
+      {
+        question: "Why aren't magic links wired automatically like verification is?",
+        answer:
+          "Better Auth reads sendVerificationEmail and sendResetPassword off the resolved root options, so a plugin's init() can supply them. The magicLink, emailOTP and organization plugins read their callback from their own closure instead, which no other plugin can reach — so you pass those three by hand off the same object.",
+      },
+      {
+        question: "Does the browser ever hold a MailKite API key?",
+        answer:
+          "Never. Every inbox call is session-authenticated against your own auth server, which holds the credential and does the privileged work.",
       },
     ],
   },
   {
-    title: "Other questions",
+    title: "Under the hood",
     questions: [
       {
-        question: "Is support free, or do I need to Google everything?",
+        question: "Why aren't email sends awaited?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "Because a slower response when an account exists tells an attacker who has an account. The plugin dispatches and returns immediately, and send failures go to onError rather than to the caller — a thrown error is the same side channel wearing a different hat. On serverless you pass waitUntil so the runtime keeps the request alive for the send.",
       },
       {
-        question: "Are you going to be subsumed by AI?",
+        question: "How is inbound mail verified?",
         answer:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus voluptates deserunt officia temporibus dignissimos.",
+          "Every delivery carries an x-mailkite-signature header, HMAC-SHA256 over the timestamp and the raw body, checked in constant time and rejected outside a replay window. MailKite mints a signing secret per route, so a claimed address is verified against its own secret rather than a shared one.",
+      },
+      {
+        question: "Can I read someone else's mail?",
+        answer:
+          "No. Reads are scoped to mailboxes you own plus your active organization's. A mailbox id you don't own returns a 404 identical to one that doesn't exist — and identical whether or not you own any mailbox at all, so it can't be used to probe which ids are real.",
+      },
+      {
+        question: "What is this built on?",
+        answer:
+          "The shadcnblocks Mainline template, Next.js 15 on Cloudflare Workers via OpenNext, and Better Auth on D1. The source is public.",
       },
     ],
   },
@@ -77,19 +97,29 @@ export const FAQ = ({
           <div className="space-y-4">
             {headerTag === "h1" ? (
               <h1 className="text-2xl tracking-tight md:text-4xl lg:text-5xl">
-                Got Questions?
+                Questions about the plugins
               </h1>
             ) : (
               <h2 className="text-2xl tracking-tight md:text-4xl lg:text-5xl">
-                Got Questions?
+                Questions about the plugins
               </h2>
             )}
             <p className="text-muted-foreground max-w-md leading-snug lg:mx-auto">
-              If you can't find what you're looking for,{" "}
-              <Link href="/contact" className="underline underline-offset-4">
-                get in touch
-              </Link>
-              .
+              If it isn&apos;t answered here, the{" "}
+              <Link
+                href="https://mailkite.dev/docs/auth/better-auth"
+                className="underline underline-offset-4"
+              >
+                docs
+              </Link>{" "}
+              and the{" "}
+              <Link
+                href="https://github.com/mailkite/better-auth-demo"
+                className="underline underline-offset-4"
+              >
+                demo source
+              </Link>{" "}
+              are both public.
             </p>
           </div>
 

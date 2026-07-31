@@ -20,7 +20,7 @@ import { mailkiteInbox } from "@mailkite/better-auth-inbox";
 const mk = mailkite({
   apiKey: "mk_live_schema_generation_only",
   from: "better-auth@auth.mailkite.dev",
-  appName: "Mainline",
+  appName: "MailKite Demo",
   appUrl: "https://better-auth.mailkite.dev",
 });
 

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import { Background } from "@/components/background";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,13 +41,7 @@ const Signup = () => {
           <div className="flex flex-col gap-4">
             <Card className="mx-auto w-full max-w-sm">
               <CardHeader className="flex flex-col items-center space-y-0">
-                <Image
-                  src="/logo.svg"
-                  alt="logo"
-                  width={94}
-                  height={18}
-                  className="mb-7 dark:invert"
-                />
+                <Logo className="mb-7" />
                 <p className="mb-2 text-2xl font-bold">Create your account</p>
                 <p className="text-muted-foreground text-center text-sm">
                   We&apos;ll send a verification email through MailKite.

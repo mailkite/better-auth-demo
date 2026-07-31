@@ -41,7 +41,7 @@ function build(env: Env) {
   const mk = mailkite({
     apiKey: env.MAILKITE_API_KEY,
     from,
-    appName: "Mainline",
+    appName: "MailKite Demo",
     appUrl,
     brandColor: "#2f6fe0",
     // REQUIRED on Workers, and the single easiest thing to get wrong.

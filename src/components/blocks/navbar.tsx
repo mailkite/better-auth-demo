@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ChevronRight, Github } from "lucide-react";
 
+import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,26 +22,26 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   {
-    label: "Features",
-    href: "#features",
+    label: "The plugins",
+    href: "/#features",
     dropdownItems: [
       {
-        title: "Modern product teams",
-        href: "/#feature-modern-teams",
+        title: "@mailkite/better-auth",
+        href: "https://www.npmjs.com/package/@mailkite/better-auth",
         description:
-          "Mainline is built on the habits that make the best product teams successful",
+          "Sends verification, password reset, magic links, OTPs and org invites",
       },
       {
-        title: "Resource Allocation",
-        href: "/#resource-allocation",
-        description: "Mainline your resource allocation and execution",
+        title: "@mailkite/better-auth-inbox",
+        href: "https://www.npmjs.com/package/@mailkite/better-auth-inbox",
+        description: "Receives mail back — the half no auth library has",
       },
     ],
   },
-  { label: "About Us", href: "/about" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Try the inbox", href: "/inbox" },
+  { label: "How it works", href: "/#how-it-works" },
   { label: "FAQ", href: "/faq" },
-  { label: "Contact", href: "/contact" },
+  { label: "Docs", href: "https://mailkite.dev/docs/auth/better-auth" },
 ];
 
 export const Navbar = () => {
@@ -57,14 +57,8 @@ export const Navbar = () => {
       )}
     >
       <div className="flex items-center justify-between px-6 py-3">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image
-            src="/logo.svg"
-            alt="logo"
-            width={94}
-            height={18}
-            className="dark:invert"
-          />
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="MailKite">
+          <Logo />
         </Link>
 
         {/* Desktop Navigation */}
@@ -126,7 +120,7 @@ export const Navbar = () => {
             </Button>
           </Link>
           <a
-            href="https://github.com/shadcnblocks/mainline-nextjs-template"
+            href="https://github.com/mailkite/better-auth-demo"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <Github className="size-4" />

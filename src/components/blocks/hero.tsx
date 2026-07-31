@@ -1,38 +1,52 @@
-import Image from "next/image";
+import Link from "next/link";
 
-import {
-  ArrowRight,
-  Blend,
-  ChartNoAxesColumn,
-  CircleDot,
-  Diamond,
-} from "lucide-react";
+import { ArrowRight, Inbox, KeyRound, Reply, ShieldCheck } from "lucide-react";
 
 import { DashedLine } from "@/components/dashed-line";
 import { Button } from "@/components/ui/button";
 
 const features = [
   {
-    title: "Tailored workflows",
-    description: "Track progress across custom issue flows for your team.",
-    icon: CircleDot,
+    title: "Every auth email, sent",
+    description:
+      "Verification, password reset, magic links, OTPs and org invites — all five surfaces.",
+    icon: KeyRound,
   },
   {
-    title: "Cross-team projects",
-    description: "Collaborate across teams and departments.",
-    icon: Blend,
+    title: "A real mailbox, received",
+    description:
+      "Claim an address, get mail as a signature-verified webhook, read it in-app.",
+    icon: Inbox,
   },
   {
-    title: "Milestones",
-    description: "Break projects down into concrete phases.",
-    icon: Diamond,
+    title: "Reply from the app",
+    description:
+      "Answers go out from the address that received them, threaded to the original.",
+    icon: Reply,
   },
   {
-    title: "Progress insights",
-    description: "Track scope, velocity, and progress over time.",
-    icon: ChartNoAxesColumn,
+    title: "No API key in the browser",
+    description:
+      "Every inbox call is session-scoped against your own auth server.",
+    icon: ShieldCheck,
   },
 ];
+
+const snippet = `import { betterAuth } from "better-auth";
+import { mailkite } from "@mailkite/better-auth";
+import { mailkiteInbox } from "@mailkite/better-auth-inbox";
+
+const mk = mailkite({ from: "you@yourdomain.com", appName: "Acme" });
+
+export const auth = betterAuth({
+  emailAndPassword: { enabled: true },
+  plugins: [
+    mk,                                    // verification + reset, wired for you
+    magicLink({ sendMagicLink: mk.sendMagicLink }),
+    emailOTP({ sendVerificationOTP: mk.sendVerificationOTP }),
+    mailkiteInbox({ domain: "yourdomain.com", webhookSecret }),
+  ],
+});`;
 
 export const Hero = () => {
   return (
@@ -40,35 +54,38 @@ export const Hero = () => {
       <div className="container flex flex-col justify-between gap-8 md:gap-14 lg:flex-row lg:gap-20">
         {/* Left side - Main content */}
         <div className="flex-1">
-          <h1 className="text-foreground max-w-160 text-3xl tracking-tight md:text-4xl lg:text-5xl xl:whitespace-nowrap">
-            Mainline Next.js template
+          <p className="text-muted-foreground mb-4 text-sm font-medium">
+            A working demo · Better Auth + MailKite
+          </p>
+          <h1 className="text-foreground max-w-160 text-3xl tracking-tight md:text-4xl lg:text-5xl">
+            Better Auth sends the email. Now it can receive it too.
           </h1>
 
-          <p className="text-muted-foreground text-1xl mt-5 md:text-3xl">
-            Mainline is an open-source website template built with shadcn/ui,
-            Tailwind 4 & Next.js
+          <p className="text-muted-foreground mt-5 max-w-xl text-lg md:text-xl">
+            Two plugins. One sends every transactional email Better Auth
+            generates; the other gives your app a real mailbox — the half no auth
+            library offers. Everything on this site is live, not a screenshot.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4 lg:flex-nowrap">
             <Button asChild>
-              <a href="https://github.com/shadcnblocks/mainline-nextjs-template">
-                Get template
-              </a>
+              <Link href="/signup">Create an account</Link>
             </Button>
             <Button
               variant="outline"
               className="from-background h-auto gap-2 bg-linear-to-r to-transparent shadow-md"
               asChild
             >
-              <a
-                href="https://shadcnblocks.com"
-                className="max-w-56 truncate text-start md:max-w-none"
-              >
-                Built by shadcnblocks.com
+              <Link href="/inbox" className="max-w-56 truncate text-start md:max-w-none">
+                Try the inbox
                 <ArrowRight className="stroke-3" />
-              </a>
+              </Link>
             </Button>
           </div>
+
+          <p className="text-muted-foreground mt-4 text-sm">
+            Real emails are sent. Use an address you can actually check.
+          </p>
         </div>
 
         {/* Right side - Features */}
@@ -100,14 +117,16 @@ export const Hero = () => {
         </div>
       </div>
 
-      <div className="mt-12 max-lg:ml-6 max-lg:h-[550px] max-lg:overflow-hidden md:mt-20 lg:container lg:mt-24">
-        <div className="relative h-[793px] w-full">
-          <Image
-            src="/hero.webp"
-            alt="hero"
-            fill
-            className="rounded-2xl object-cover object-left-top shadow-lg max-lg:rounded-tr-none"
-          />
+      {/* The integration itself, in place of the template's product screenshot —
+          the code IS the thing being demonstrated. */}
+      <div className="mt-12 md:mt-20 lg:container lg:mt-24">
+        <div className="bg-muted/50 overflow-x-auto rounded-2xl border p-5 shadow-lg md:p-8">
+          <p className="text-muted-foreground mb-4 font-mono text-xs">
+            lib/auth.ts — the whole integration
+          </p>
+          <pre className="text-foreground font-mono text-[13px] leading-relaxed">
+            <code>{snippet}</code>
+          </pre>
         </div>
       </div>
     </section>
