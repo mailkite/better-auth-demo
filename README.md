@@ -26,7 +26,7 @@ wiring is readable in one screen.
 
 ```ts
 const mk = mailkite({
-  apiKey: env.MAILKITE_API_KEY,
+  apiKey: env.MAILKITE_API_KEY,          // required on both plugins — no env fallback
   from: "better-auth@auth.mailkite.dev",
   appName: "MailKite Demo",
   appUrl,

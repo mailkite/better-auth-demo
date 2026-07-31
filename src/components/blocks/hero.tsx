@@ -37,8 +37,10 @@ import { emailOTP, magicLink } from "better-auth/plugins";
 import { mailkite } from "@mailkite/better-auth";
 import { mailkiteInbox } from "@mailkite/better-auth-inbox";
 
-// apiKey falls back to process.env.MAILKITE_API_KEY when you omit it.
-const mk = mailkite({ from: "auth@yourdomain.com", appName: "Acme" });
+// apiKey is required on both plugins — there is no environment fallback.
+const apiKey = process.env.MAILKITE_API_KEY!;
+
+const mk = mailkite({ apiKey, from: "auth@yourdomain.com", appName: "Acme" });
 
 export const auth = betterAuth({
   emailAndPassword: { enabled: true },
@@ -47,7 +49,7 @@ export const auth = betterAuth({
     magicLink({ sendMagicLink: mk.sendMagicLink }),
     emailOTP({ sendVerificationOTP: mk.sendVerificationOTP }),
     mailkiteInbox({
-      apiKey: process.env.MAILKITE_API_KEY!,   // required here, no env fallback
+      apiKey,                                  // the same key, declared once
       domain: "yourdomain.com",
       webhookSecret: process.env.MAILKITE_WEBHOOK_SECRET!,
     }),
